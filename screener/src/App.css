@@ -1,0 +1,16 @@
+.app {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background is already set on <body> by Chakra global styles */
+}
+
+.neon {
+  font-size: 4rem;
+  color: #00ff9f;
+  text-shadow:
+    0 0 4px #00ff9f,
+    0 0 10px #00ff9f,
+    0 0 20px #00ff9f;
+}

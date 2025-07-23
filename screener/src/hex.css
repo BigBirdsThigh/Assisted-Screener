@@ -1,0 +1,55 @@
+.hexagon-grid {
+    --cols: 20;
+    --size: 80px;
+    --delay-step: 100ms;
+    --initial-delay: 200ms;
+    --duration: 2000ms;
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), var(--size));
+    grid-auto-rows: calc(var(--size) * 0.866);
+    perspective: 700px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  @keyframes hexFlip {
+    from { transform: rotateX(0deg); opacity: 1; }
+    to   { transform: rotateX(90deg) scale(1.1); opacity: 0; }
+  }
+  
+  .hexagon {
+    width: var(--size);
+    height: calc(var(--size) * 0.866);
+    margin: calc(-0.2165 * var(--size)) 0;
+  
+    /* Cyberpunk gradient fill */
+    background: linear-gradient(
+      135deg,
+      rgba(0,255,159,0.2) 0%,
+      rgba(17,17,17,0.9) 80%
+    );
+    /* Neon green border */
+    border: 1px solid rgba(0,255,159,0.7);
+    
+    clip-path: polygon(
+      25% 0%, 75% 0%,
+      100% 50%, 75% 100%,
+      25% 100%, 0% 50%
+    );
+  
+    /* Stronger neon glow */
+    box-shadow:
+      inset 0 0 6px rgba(0,255,159,0.6),
+      0 0 8px rgba(0,255,159,0.5),
+      0 0 16px rgba(0,255,159,0.3);
+  
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    animation: hexFlip var(--duration) ease-in-out forwards;
+     /* here’s the tweak: add initial delay before the per-row delay */
+    animation-delay: calc(
+        var(--initial-delay) + var(--row) * var(--delay-step)
+    );
+  }
+  
