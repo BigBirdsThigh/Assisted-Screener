@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import './hex-mask.css';
 
-export default function HexReveal({ hexSize = 20, duration = 3000, children }) {
+export default function HexReveal({ hexSize = 20, duration = 3000, startDelay = 0, children }) {
   const containerRef = useRef(null);
   const [gridSize, setGridSize] = useState({ rows: 0, cols: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -10,11 +10,12 @@ export default function HexReveal({ hexSize = 20, duration = 3000, children }) {
   useLayoutEffect(() => {
     if (!containerRef.current) return;
     const { width, height } = containerRef.current.getBoundingClientRect();
+    const spacingFactor = 0.985;
 
-    const dx = hexSize * Math.sqrt(3);
-    const dy = hexSize * 1.5;
+    const dx = hexSize * Math.sqrt(3) * spacingFactor;
+    const dy = hexSize * 1.5 * spacingFactor;
 
-    const cols = Math.ceil(width / dx) + 6;  // +6 for buffer beyond edges
+    const cols = Math.ceil(width / dx) + 6;
     const rows = Math.ceil(height / dy) + 6;
 
     setGridSize({ rows, cols });
@@ -24,22 +25,32 @@ export default function HexReveal({ hexSize = 20, duration = 3000, children }) {
   useEffect(() => {
     let start = null;
     let raf;
+    let delayTimeout;
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const elapsed = timestamp - start;
-      const p = Math.min(elapsed / duration, 1.2); // go slightly over to fully clear
+      const p = Math.min(elapsed / duration, 1.2);
       setProgress(p);
 
       if (p < 1.2) raf = requestAnimationFrame(animate);
     };
 
-    raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(raf);
-  }, [duration]);
+    // Delay animation, but render hexes at full scale initially
+    delayTimeout = setTimeout(() => {
+      raf = requestAnimationFrame(animate);
+    }, startDelay);
 
-  const dx = hexSize * Math.sqrt(3);
-  const dy = hexSize * 1.5;
+    return () => {
+      clearTimeout(delayTimeout);
+      cancelAnimationFrame(raf);
+    };
+  }, [duration, startDelay]);
+
+  const spacingFactor = 0.985;
+  const dx = hexSize * Math.sqrt(3) * spacingFactor;
+  const dy = hexSize * 1.5 * spacingFactor;
+
   const centerX = containerSize.width / 2;
   const centerY = containerSize.height / 2;
 
@@ -64,10 +75,15 @@ export default function HexReveal({ hexSize = 20, duration = 3000, children }) {
       const falloff = 0.08;
       let scale = 1;
 
-      if (norm < progress - falloff) {
-        scale = 0;
-      } else if (norm < progress) {
-        scale = 1 - ((progress - norm) / falloff);
+      // Before animation starts, hexes should all be fully visible
+      if (progress === 0 && startDelay > 0) {
+        scale = 1;
+      } else {
+        if (norm < progress - falloff) {
+          scale = 0;
+        } else if (norm < progress) {
+          scale = 1 - ((progress - norm) / falloff);
+        }
       }
 
       hexes.push(

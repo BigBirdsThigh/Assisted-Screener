@@ -7,36 +7,58 @@ import {
 } from '@chakra-ui/react'
 import { theme } from './theme'
 import HexIntro from './HexIntro'
+import HexReveal from './HexReveal'
 
 export default function App() {
-  const [showIntro, setShowIntro] = useState(false)
-  const [revealComplete, setRevealComplete] = useState(false)
+  const [revealStage, setRevealStage] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
+  const [startIntro, setStartIntro] = useState(false)
 
   useEffect(() => {
-    const preDelay = 2000
-    const introDuration = 3000
-  
-    const showTimeout = setTimeout(() => {
-      setShowIntro(true)
-    }, preDelay)
-  
-    const hideWelcomeTimeout = setTimeout(() => {
-      setRevealComplete(true)
-    }, preDelay + 500) // delay before Welcome screen disappears
-  
-    return () => {
-      clearTimeout(showTimeout)
-      clearTimeout(hideWelcomeTimeout)
-    }
+    const hexRevealDuration = 4000
+    const introStartDelay = 5200     // When HexIntro begins (e.g. 1.2s after reveal ends)
+    const welcomeHideDelay = 6000    // When WELCOME disappears (e.g. 1.8s after intro starts)
+
+    // When to end reveal and show static WELCOME
+    setTimeout(() => {
+      setRevealStage(false)
+      setShowWelcome(true)
+    }, hexRevealDuration + 1000) // small buffer
+
+    // When to start HexIntro
+    setTimeout(() => {
+      setStartIntro(true)
+    }, introStartDelay)
+
+    // When to hide WELCOME during/after HexIntro
+    setTimeout(() => {
+      setShowWelcome(false)
+    }, welcomeHideDelay)
   }, [])
-  
 
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode="dark" />
 
-      {/* WELCOME SCREEN — stays fixed until revealComplete */}
-      {!revealComplete && (
+      {/* 1️⃣ HEX REVEAL */}
+      {revealStage && (
+        <HexReveal hexSize={20} duration={3000} startDelay={1000}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            height="100vh"
+            bg="black"
+          >
+            <Heading size="3xl" color="white">
+              WELCOME
+            </Heading>
+          </Box>
+        </HexReveal>
+      )}
+
+      {/* 2️⃣ STATIC WELCOME SCREEN */}
+      {showWelcome && (
         <Box
           position="fixed"
           inset={0}
@@ -52,8 +74,8 @@ export default function App() {
         </Box>
       )}
 
-      {/* HEX INTRO OVERLAY — appears after delay, overlays full screen */}
-      {showIntro && (
+      {/* 3️⃣ HEX INTRO OVERLAY */}
+      {startIntro && (
         <Box position="fixed" inset={0} zIndex={2}>
           <HexIntro hexSize={17} duration={3000}>
             <Box
