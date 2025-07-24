@@ -1,13 +1,25 @@
-.hex-grid {
-    position: fixed;
-    inset: 0;
+.hex-reveal-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
     background: black;
     overflow: hidden;
-    pointer-events: none;
-    z-index: 10;
   }
   
-  .hex {
+  .content-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  
+  .hex-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  
+  .hex-tile {
     position: absolute;
     overflow: hidden;
   }
