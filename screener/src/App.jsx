@@ -7,13 +7,13 @@ import {
   Heading
 } from '@chakra-ui/react'
 import { theme } from './theme'
-import HexWipe from './HexWIpe'
+import HexGrid from './HexGrid'
 export default function App() {
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode="dark" />
 
-      <HexWipe hexSize={80} speed={1.5} startDelay={0.35}>
+      <HexGrid>
         <Box
           display="flex"
           alignItems="center"
@@ -29,7 +29,7 @@ export default function App() {
             Name
           </Heading>
         </Box>
-      </HexWipe>
+      </HexGrid>
     </ChakraProvider>
   )
 }
