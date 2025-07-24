@@ -4,7 +4,7 @@
     background: black;
     overflow: hidden;
     pointer-events: none;
-    z-index: 10; /* or adjust to overlay content */
+    z-index: 10;
   }
   
   .hex {

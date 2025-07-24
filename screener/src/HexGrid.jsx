@@ -1,12 +1,11 @@
 import React, { useRef, useLayoutEffect, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import './hex.css';
 
 export default function HexGrid({ hexSize = 20 }) {
   const containerRef = useRef(null);
   const [gridSize, setGridSize] = useState({ rows: 0, cols: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [triggerAnimation, setTriggerAnimation] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(0);
 
   useLayoutEffect(() => {
     if (!containerRef.current) return;
@@ -22,29 +21,56 @@ export default function HexGrid({ hexSize = 20 }) {
     setContainerSize({ width, height });
   }, [hexSize]);
 
-  // Wait a moment before triggering animation (for layout to stabilize)
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setTriggerAnimation(true);
-    }, 500); // 0.5s delay before animation starts
+    let start = null;
+    let rafId;
 
-    return () => clearTimeout(timeout);
+    const animate = (timestamp) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const duration = 3000;
+
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimationProgress(progress);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   const dx = hexSize * Math.sqrt(3);
   const dy = hexSize * 1.5;
-  const hexes = [];
 
   const centerX = containerSize.width / 2;
   const centerY = containerSize.height / 2;
+  const maxDistance = Math.hypot(centerX, centerY);
+
+  const hexes = [];
 
   for (let row = 0; row < gridSize.rows; row++) {
     for (let col = 0; col < gridSize.cols; col++) {
       const x = col * dx + (row % 2 === 0 ? 0 : dx / 2) - dx;
       const y = row * dy - dy;
 
-      const distanceFromCenter = Math.hypot(centerX - x, centerY - y);
-      const delay = distanceFromCenter * 0.005; // Slower wave spread
+      const distance = Math.hypot(centerX - x, centerY - y);
+      const normalizedDistance = distance / maxDistance;
+
+      const waveFront = animationProgress; // 0 → 1
+      const falloff = 0.1; // ripple width
+
+      // shrink hex once wave reaches it
+      let scale = 1;
+
+      if (normalizedDistance <= waveFront - falloff) {
+        scale = 0;
+      } else if (normalizedDistance <= waveFront) {
+        const t = (waveFront - normalizedDistance) / falloff;
+        scale = 1 - t;
+      }
 
       hexes.push(
         <div
@@ -53,19 +79,12 @@ export default function HexGrid({ hexSize = 20 }) {
           style={{
             width: `${hexSize * 2}px`,
             height: `${hexSize * 2}px`,
-            transform: `translate(${x}px, ${y}px)`,
+            transform: `translate(${x}px, ${y}px) scale(${scale})`,
+            transformOrigin: 'center center',
+            transition: 'transform 0.4s ease-out',
           }}
         >
-          <motion.div
-            className="hex-inner"
-            initial={{ opacity: 1, scale: 1 }}
-            animate={triggerAnimation ? { opacity: 0, scale: 0 } : {}}
-            transition={{
-              duration: 2.5,
-              delay,
-              ease: 'easeInOut',
-            }}
-          />
+          <div className="hex-inner" />
         </div>
       );
     }
